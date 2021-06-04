@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_swiper/flutter_swiper.dart';
+import 'package:movieapp/src/providers/movies_provider.dart';
+import 'package:movieapp/src/widgets/card_swipe_widget.dart';
 
 class HomePage extends StatelessWidget {
+  final moviesProvider = new MoviesProvider();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,20 +27,20 @@ class HomePage extends StatelessWidget {
   //Agregamos el swipper a la vista
 
   Widget _swipperCards() {
-    return Container(
-      width: double.infinity,
-      height: 300.0,
-      child: Swiper(
-        layout: SwiperLayout.STACK,
-        itemCount: 5,
-        itemWidth: 300.0,
-        itemBuilder: (BuildContext context, int index) {
-          return Image.network("https://startech-rd.io/content/images/size/w2000/2020/03/Flutter-1-1-1.png",
-              fit: BoxFit.fill);
-        },
-        pagination: SwiperPagination(),
-        // control: SwiperControl(),
-      ),
+    moviesProvider.getMovieNowPlaying();
+
+    return FutureBuilder(
+      future: moviesProvider.getMovieNowPlaying(),
+      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+        if (snapshot.hasData) {
+          return CardSwipe(movies: snapshot.data);
+        } else {
+          return Container(
+              height: 400.0,
+              child: Center(
+                  child: CircularProgressIndicator()));
+        }
+      },
     );
   }
 }
