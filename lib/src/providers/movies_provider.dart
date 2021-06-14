@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:movieapp/src/models/movie_models.dart';
@@ -8,19 +9,84 @@ class MoviesProvider {
   String _url = 'api.themoviedb.org';
   String _language = 'en-US';
 
-  Future<List<Movie>> getMovieNowPlaying() async {
-    final url = Uri.https(_url,'3/movie/now_playing',
-        {'api_key': _apiKey, 'language': _language});
+  int _popularsPage = 0;
+  bool _upload=false;
 
-    // almacenamos la información del http en una variable
+  List<Movie> _populars = [];
+  final _popularsStreamController = StreamController<List<Movie>>.broadcast();
+
+  Function(List<Movie>) get popularsSink => _popularsStreamController.sink.add;
+
+  Stream<List<Movie>> get popularsStream => _popularsStreamController.stream;
+
+  void disposeStream() {
+    _popularsStreamController?.close();
+  }
+
+  Future<List<Movie>> _buildResponse(Uri url) async {
     final resp = await http.get(url);
 
     // decodificamos la data que hay en nuestra variable
     final decodeData = json.decode(resp.body);
 
-final movies=new Movies.fromJsonList(decodeData['results']);
+    final movies = new Movies.fromJsonList(decodeData['results']);
     // print(movies.items[3].title);
 
     return movies.items;
+  }
+
+  Future<List<Movie>> getMovieNowPlaying() async {
+    final url = Uri.https(_url, '3/movie/now_playing',
+        {'api_key': _apiKey, 'language': _language});
+
+    // almacenamos la información del http en una variable
+    // final resp = await http.get(url);
+    //
+    // // decodificamos la data que hay en nuestra variable
+    // final decodeData = json.decode(resp.body);
+    //
+    // final movies = new Movies.fromJsonList(decodeData['results']);
+    // // print(movies.items[3].title);
+    //
+    // return movies.items;
+    return await _buildResponse(url);
+  }
+
+  Future<List<Movie>> getMoviePopulars() async {
+
+    if(_upload)return[];
+
+    _upload=true;
+
+    _popularsPage++;
+
+
+
+    final url = Uri.https(_url, '3/movie/popular', {
+      'api_key': _apiKey,
+      'language': _language,
+      'page': _popularsPage.toString()
+    });
+
+    // almacenamos la información del http en una variable
+    // final resp = await http.get(url);
+    //
+    // // decodificamos la data que hay en nuestra variable
+    // final decodeData = json.decode(resp.body);
+    //
+    // final movies = new Movies.fromJsonList(decodeData['results']);
+    // // print(movies.items[3].title);
+    //
+    // return movies.items;
+
+    final resp=await _buildResponse(url);
+
+    _populars.addAll(resp);
+    popularsSink(_populars);
+
+
+    _upload=false;
+
+    return resp;
   }
 }
