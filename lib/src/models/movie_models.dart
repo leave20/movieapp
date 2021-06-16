@@ -52,12 +52,12 @@ class Movie {
     originalLanguage = json['original_language'];
     originalTitle = json['original_title'];
     overview = json['overview'];
-    popularity = json['popularity'];
+    popularity = json['popularity']/1;
     posterPath = json['poster_path'];
     releaseDate = json['release_date'];
     title = json['title'];
     video = json['video'];
-    voteAverage = json['vote_average'];
+    voteAverage = json['vote_average']/1;
     voteCount = json['vote_count'];
   }
 
@@ -85,6 +85,14 @@ class Movie {
       return 'https://photos.app.goo.gl/XiRo1FZT8zdLaWm59';
     } else {
       return 'https://image.tmdb.org/t/p/original//$posterPath';
+    }
+  }
+
+  getBackgroundImage() {
+    if (posterPath == null) {
+      return 'https://photos.app.goo.gl/XiRo1FZT8zdLaWm59';
+    } else {
+      return 'https://image.tmdb.org/t/p/original//$backdropPath';
     }
   }
 }
