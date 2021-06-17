@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:movieapp/src/models/actors_models.dart';
 import 'package:movieapp/src/models/movie_models.dart';
 import 'package:http/http.dart' as http;
 
@@ -10,7 +11,7 @@ class MoviesProvider {
   String _language = 'en-US';
 
   int _popularsPage = 0;
-  bool _upload=false;
+  bool _upload = false;
 
   List<Movie> _populars = [];
   final _popularsStreamController = StreamController<List<Movie>>.broadcast();
@@ -53,14 +54,11 @@ class MoviesProvider {
   }
 
   Future<List<Movie>> getMoviePopulars() async {
+    if (_upload) return [];
 
-    if(_upload)return[];
-
-    _upload=true;
+    _upload = true;
 
     _popularsPage++;
-
-
 
     final url = Uri.https(_url, '3/movie/popular', {
       'api_key': _apiKey,
@@ -79,14 +77,38 @@ class MoviesProvider {
     //
     // return movies.items;
 
-    final resp=await _buildResponse(url);
+    final resp = await _buildResponse(url);
 
     _populars.addAll(resp);
     popularsSink(_populars);
 
-
-    _upload=false;
+    _upload = false;
 
     return resp;
+  }
+
+  Future<List<Actor>> getCast(String movieId) async{
+    final url=Uri.https(_url, '3/movie/$movieId/credits',{
+      'api_key':_apiKey,
+      'languages':_language
+    });
+
+    final  resp=await http.get(url);
+    final decodedData=json.decode(resp.body);
+
+    final cast =new Cast.fromJsonList(decodedData['cast']);
+
+    return cast.actors;
+  }
+
+  Future<List<Movie>> searchMovie(String query) async{
+
+    final url=Uri.https(_url, '3/search/movie',{
+      'api_key':_apiKey,
+      'language':_language,
+      'query':query
+    });
+
+    return await _buildResponse(url);
   }
 }
